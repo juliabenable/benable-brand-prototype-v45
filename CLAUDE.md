@@ -26,7 +26,17 @@ skeletons + drafts thumbnail carousel + creator pager retired in the shell
 reviewModal.css for reference. Flag sheet = Tony's v43.2 copy, anchored
 392px over the right panel. Keyboard: Esc (sheet→shell, blocked mid-flash),
 ←/→ drafts. Entry lands on first undecided; "See what you sent ↗" drawer
-door reopens decided states.
+door reopens decided states. POLISH ROUND (Julia, Aug 18 night): sidebar
+active-row accent bar removed (looked detached), rows tightened 10/12;
+flash card enlarged (340–380px, 72px check, 19px title); STAGE RESTRUCTURED
+— the player owns a flex slot (flex:1 + aspect-ratio; percentage heights die
+in indefinite flex slots, use flex-grow) and the caption a FIXED 118px
+reserve, so caption length never resizes or shifts the video; flag sheet
+CENTERED over the shell (grid scrim, card position:relative — static sent
+the absolute close-✕ to the scrim corner), content-sized, body 46/36/26,
+textarea 96px, sub max-width 360. GOTCHA: the Claude browser pane can
+collapse to a 0×0 viewport — every 100vw/getBoundingClientRect reads garbage;
+verify layout in Playwright at 1512×960 instead.
 
 
 **v43.1 (Aug 17) — review direction C: AMINE'S MODAL, the new default.** The

@@ -1466,8 +1466,8 @@ body:has(.rvm) {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 11px;
+  padding: 10px 12px;
   border-radius: 12px;
   text-align: left;
   position: relative;
@@ -1480,18 +1480,6 @@ body:has(.rvm) {
 
 .rvm-side-row.is-active {
   background: #f3f0ff;
-}
-
-/* active accent bar on the row's leading edge */
-.rvm-side-row.is-active::before {
-  content: '';
-  position: absolute;
-  left: -14px;
-  top: 14px;
-  bottom: 14px;
-  width: 3px;
-  border-radius: 3px;
-  background: var(--accent-bg);
 }
 
 .rvm-side-avatar {
@@ -1541,8 +1529,8 @@ body:has(.rvm) {
 
 .rvm-side-dot {
   flex: none;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   background: #f0a32e;
 }
@@ -1630,14 +1618,35 @@ body:has(.rvm) {
   position: relative;
   z-index: 2;
   flex: 1;
+  width: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 16px 24px 24px;
+  padding: 14px 24px 18px;
   animation: rvm-stage-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* the player fills whatever height is left — caption length can't touch it */
+.rvm-stage-video-slot {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 16px;
+}
+
+/* fixed reserve: 1-, 2- and 3-line captions all live in the same box */
+.rvm-stage-caption-slot {
+  flex: none;
+  height: 118px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .rvm-stage-content.is-leaving {
@@ -1665,8 +1674,10 @@ body:has(.rvm) {
   left: auto;
   top: auto;
   transform: none;
-  flex: none;
-  height: clamp(400px, calc(100vh - 420px), 598px);
+  flex: 1;
+  min-height: 0;
+  max-height: 598px;
+  height: auto;
   width: auto;
   aspect-ratio: 336 / 598;
 }
@@ -1708,9 +1719,9 @@ body:has(.rvm) {
 }
 
 .rvm-flash-card {
-  min-width: 240px;
-  max-width: 300px;
-  padding: 26px 28px 24px;
+  min-width: 340px;
+  max-width: 380px;
+  padding: 36px 40px 32px;
   background: #fff;
   border-radius: 20px;
   box-shadow: 0px 18px 48px rgba(20, 10, 50, 0.3);
@@ -1719,22 +1730,23 @@ body:has(.rvm) {
 }
 
 .rvm-flash-check {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto;
 }
 
 .rvm-flash-title {
-  margin-top: 12px;
-  font-size: 16px;
+  margin-top: 16px;
+  font-size: 19px;
   font-weight: 700;
+  letter-spacing: -0.2px;
   color: #1c1c1c;
 }
 
 .rvm-flash-sub {
-  margin-top: 4px;
-  font-size: 12.5px;
-  line-height: 17px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 19px;
   color: #717171;
 }
 
@@ -1838,7 +1850,43 @@ body:has(.rvm) {
   justify-content: center;
 }
 
-/* the flag sheet anchors over the right panel inside the shell */
+/* the flag sheet centers over the whole shell (Julia, Aug 18) and sizes
+   to its content — no anchored corner, no leftover chip-era air */
+.rvm-shell .rvm-changes-scrim {
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+}
+
 .rvm-shell .rvm-changes-card {
-  width: 392px;
+  position: relative; /* keeps the close ✕ anchored to the card, not the scrim */
+  right: auto;
+  bottom: auto;
+  width: 460px;
+  min-height: 0;
+}
+
+.rvm-shell .rvm-changes-body {
+  padding: 46px 36px 26px;
+}
+
+.rvm-shell .rvm-changes-title {
+  font-size: 17px;
+  letter-spacing: -0.2px;
+}
+
+.rvm-shell .rvm-changes-sub {
+  margin-top: 10px;
+  max-width: 360px;
+  line-height: 20px;
+}
+
+.rvm-shell .rvm-changes-textarea {
+  margin-top: 20px;
+  height: 96px;
+  font-size: 13px;
+}
+
+.rvm-shell .rvm-changes-footer {
+  padding: 16px 36px 22px;
 }

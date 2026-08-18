@@ -474,19 +474,25 @@ export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
                 </button>
               </div>
 
-              {/* the draft itself — keyed so a fresh one slides in */}
+              {/* the draft itself — keyed so a fresh one slides in. The video
+                  owns a flex slot and the caption a FIXED reserve, so caption
+                  length never resizes or shifts the player. */}
               <div key={clip.id} className={`rvm-stage-content${leaving ? ' is-leaving' : ''}`}>
-                <VideoPane clip={clip} store={store} />
-                <div className="rvm-stage-caption">
-                  <p className="rvm-stage-caption-label">Caption</p>
-                  <div className="rvm-stage-caption-body">
-                    {(clip.capLines ?? [clip.caption]).map((line, i) => (
-                      <p key={i}>
-                        {capSegs(line).map((seg, j) => (
-                          <span key={j} className={seg.tone ? `rvm-caption-${seg.tone}` : undefined}>{seg.text}</span>
-                        ))}
-                      </p>
-                    ))}
+                <div className="rvm-stage-video-slot">
+                  <VideoPane clip={clip} store={store} />
+                </div>
+                <div className="rvm-stage-caption-slot">
+                  <div className="rvm-stage-caption">
+                    <p className="rvm-stage-caption-label">Caption</p>
+                    <div className="rvm-stage-caption-body">
+                      {(clip.capLines ?? [clip.caption]).map((line, i) => (
+                        <p key={i}>
+                          {capSegs(line).map((seg, j) => (
+                            <span key={j} className={seg.tone ? `rvm-caption-${seg.tone}` : undefined}>{seg.text}</span>
+                          ))}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
