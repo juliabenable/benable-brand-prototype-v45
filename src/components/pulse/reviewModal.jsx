@@ -424,13 +424,21 @@ export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
                       </span>
                       <span className="rvm-side-line">{face.line}</span>
                     </span>
-                    {face.state === 'pending' ? (
-                      <span className="rvm-side-dot" aria-label="Waiting on you" />
-                    ) : face.state === 'flagged' ? (
-                      <img src={A('assets/icons/draft-changes.svg')} alt="Issue flagged" className="rvm-side-stamp" />
-                    ) : (
-                      <img src={A('assets/icons/draft-approved.svg')} alt="Reviewed" className="rvm-side-stamp" />
-                    )}
+                    {/* one fixed slot so the amber dot and the tick share an axis;
+                        single-circle ticks (the ring-in-a-ring stamp read weird) */}
+                    <span className="rvm-side-slot">
+                      {face.state === 'pending' ? (
+                        <span className="rvm-side-dot" aria-label="Waiting on you" />
+                      ) : face.state === 'flagged' ? (
+                        <span className="rvm-side-tick rvm-side-tick--flag" aria-label="Issue flagged">!</span>
+                      ) : (
+                        <span className="rvm-side-tick" aria-label="Reviewed">
+                          <svg viewBox="0 0 12 12" fill="none" aria-hidden>
+                            <path d="M2.4 6.4 5 9l4.6-6" stroke="#12A150" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                      )}
+                    </span>
                   </button>
                 );
               })}

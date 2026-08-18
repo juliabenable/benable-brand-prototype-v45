@@ -36,7 +36,17 @@ CENTERED over the shell (grid scrim, card position:relative — static sent
 the absolute close-✕ to the scrim corner), content-sized, body 46/36/26,
 textarea 96px, sub max-width 360. GOTCHA: the Claude browser pane can
 collapse to a 0×0 viewport — every 100vw/getBoundingClientRect reads garbage;
-verify layout in Playwright at 1512×960 instead.
+verify layout in Playwright at 1512×960 instead. ROUND 2 (Julia, Aug 18
+late, after comparing with Tony's second-shot mock): sidebar rows get 6px
+air (adjacent highlights collided); TONY-SCALE TYPE — header 21/14, side
+names 15/13, panel head 18/14, pre-check card 14 title + 13.5 items (scoped
+`.rvm-shell .rvm-precheck*`), footnote 13.5, footer buttons h46; sidebar
+stamps rebuilt as SINGLE soft circles (22px #d7f3e3 + brighter #12A150
+inline-SVG tick · amber ! for flagged — the ring-in-a-ring draft-approved.svg
+read weird) in a fixed 22px slot so tick and amber dot share an axis; flag
+sheet now centers in the RIGHT-HAND PANEL BOX (grid scrim align-center
+justify-end pr16 + pt76 header offset, card 368px) — not the whole shell —
+and the footer rail line/tint before "Send to our team" is gone.
 
 
 **v43.1 (Aug 17) — review direction C: AMINE'S MODAL, the new default.** The
@@ -145,4 +155,4 @@ Brand-portal prototype: captured production HTML + React overlays. v37 = Julia's
 ## Dev + ship
 - Dev: launch.json name `brand-prototype-v45`, port 5223. Demo page: `/brand/tonypikora/campaigns/46` (campaign) and `/brand/tonypikora/campaigns` (brand overview).
 - Deploy: `bash scripts/ship.sh "commit message"` — builds, commits, pushes, watches the Pages run, curls the live URL.
-- Live: https://juliabenable.github.io/benable-brand-prototype-v43/
+- Live: https://juliabenable.github.io/benable-brand-prototype-v45/

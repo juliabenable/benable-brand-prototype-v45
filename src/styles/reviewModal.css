@@ -1403,7 +1403,7 @@ body:has(.rvm) {
 }
 
 .rvm-shell-title {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.2px;
   color: #1c1c1c;
@@ -1411,7 +1411,7 @@ body:has(.rvm) {
 
 .rvm-shell-sub {
   margin-top: 3px;
-  font-size: 13px;
+  font-size: 14px;
   color: #717171;
 }
 
@@ -1466,12 +1466,16 @@ body:has(.rvm) {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px;
   border-radius: 12px;
   text-align: left;
   position: relative;
   transition: background 0.15s ease;
+}
+
+.rvm-side-row + .rvm-side-row {
+  margin-top: 6px;
 }
 
 .rvm-side-row:hover {
@@ -1507,7 +1511,7 @@ body:has(.rvm) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 600;
   color: #1c1c1c;
   white-space: nowrap;
@@ -1520,26 +1524,50 @@ body:has(.rvm) {
 
 .rvm-side-line {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 13px;
   color: #717171;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.rvm-side-dot {
+.rvm-side-slot {
   flex: none;
-  width: 7px;
-  height: 7px;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rvm-side-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
   background: #f0a32e;
 }
 
-.rvm-side-stamp {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.18));
+/* single soft-green circle, brighter tick (the old ring-in-a-ring stamp
+   read weird next to the amber dot) */
+.rvm-side-tick {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #d7f3e3;
+  display: grid;
+  place-items: center;
+}
+
+.rvm-side-tick svg {
+  width: 12px;
+  height: 12px;
+}
+
+.rvm-side-tick--flag {
+  background: #fdeed2;
+  color: #dd8500;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* ---- stage ---- */
@@ -1700,7 +1728,7 @@ body:has(.rvm) {
 
 .rvm-stage-caption-body {
   margin-top: 4px;
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.45;
   color: #1c1c1c;
 }
@@ -1768,16 +1796,16 @@ body:has(.rvm) {
 }
 
 .rvm-panel-h {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
-  line-height: 23px;
+  line-height: 25px;
   letter-spacing: -0.2px;
   color: #1c1c1c;
 }
 
 .rvm-panel-hsub {
-  margin: 6px 0 16px;
-  font-size: 13.5px;
+  margin: 6px 0 18px;
+  font-size: 14px;
   line-height: 1.45;
   color: #717171;
 }
@@ -1787,8 +1815,8 @@ body:has(.rvm) {
 }
 
 .rvm-panel-footnote {
-  margin-top: 14px;
-  font-size: 12.5px;
+  margin-top: 16px;
+  font-size: 13.5px;
   line-height: 1.5;
   color: #9a9a9a;
 }
@@ -1805,12 +1833,12 @@ body:has(.rvm) {
 
 .rvm-foot-flag {
   flex: none;
-  height: 44px;
-  padding: 0 18px;
+  height: 46px;
+  padding: 0 20px;
   background: #fff;
   border: 1px solid var(--default-border-base);
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 500;
   color: var(--default-text-base);
   white-space: nowrap;
@@ -1824,10 +1852,10 @@ body:has(.rvm) {
 .rvm-foot-approve {
   flex: 1;
   min-width: 0;
-  height: 44px;
+  height: 46px;
   background: var(--accent-bg);
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 600;
   color: var(--default-text-inverse);
   transition: background 0.15s ease;
@@ -1850,24 +1878,29 @@ body:has(.rvm) {
   justify-content: center;
 }
 
-/* the flag sheet centers over the whole shell (Julia, Aug 18) and sizes
-   to its content — no anchored corner, no leftover chip-era air */
+/* the flag sheet centers in the RIGHT-HAND panel column (Julia: "not
+   centered on the modal — centered in the right-hand side box") */
 .rvm-shell .rvm-changes-scrim {
   border-radius: 24px;
   display: grid;
-  place-items: center;
+  align-items: center;
+  justify-items: end;
+  padding-right: 16px;
+  /* the scrim spans the header too — offset so the card centers on the
+     right-hand BOX (the panel below the header), not the whole shell */
+  padding-top: 76px;
 }
 
 .rvm-shell .rvm-changes-card {
   position: relative; /* keeps the close ✕ anchored to the card, not the scrim */
   right: auto;
   bottom: auto;
-  width: 460px;
+  width: 368px;
   min-height: 0;
 }
 
 .rvm-shell .rvm-changes-body {
-  padding: 46px 36px 26px;
+  padding: 42px 28px 24px;
 }
 
 .rvm-shell .rvm-changes-title {
@@ -1887,6 +1920,43 @@ body:has(.rvm) {
   font-size: 13px;
 }
 
+/* no rail: the send button rides plainly under the note box (the grey
+   line + tinted band read as clutter — Julia) */
 .rvm-shell .rvm-changes-footer {
-  padding: 16px 36px 22px;
+  background: none;
+  border-top: none;
+  padding: 4px 28px 24px;
+}
+
+
+/* Tony-scale pre-checks (Julia, Aug 18 night — his sizing read better) */
+.rvm-shell .rvm-precheck {
+  padding: 15px 16px 17px;
+}
+
+.rvm-shell .rvm-precheck-title {
+  font-size: 14px;
+}
+
+.rvm-shell .rvm-precheck-list {
+  margin-top: 13px;
+  gap: 10px;
+}
+
+.rvm-shell .rvm-precheck-item {
+  font-size: 13.5px;
+  line-height: 18px;
+  gap: 11px;
+}
+
+.rvm-shell .rvm-precheck-tick {
+  width: 12px;
+}
+
+.rvm-shell .rvm-feedback-message-text {
+  font-size: 13.5px;
+}
+
+.rvm-shell .rvm-panel-feedback-title {
+  font-size: 13.5px;
 }
