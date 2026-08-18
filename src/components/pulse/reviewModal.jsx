@@ -4,29 +4,31 @@ import { PHOTOS } from './pulseData.js';
 import { assetsOf } from './review.jsx';
 import '../../styles/reviewModal.css';
 
-/* REVIEW UI · Modal (v43 default) — Amine's pixel-perfect Figma build
-   (repo AmineBenjil/brand-portal-review-content, "Review content" v6.1),
-   ported onto v43's data + decision model: the queue is the table's
-   draftIn rows, decisions land on the REVIEW asset objects (asset.state,
-   module-persisted) so the tracker, chips and row faces derive exactly as
-   they do for the Chat/Sheet directions. Change-request notes stack on
-   asset.notes. All decided rules hold: no reject · issue notes go to the
-   Benable team · can't send empty.
+/* REVIEW UI · Modal, v45 SHELL (Julia's mock, Aug 18) — the review becomes a
+   three-pane workspace instead of Amine's two-pane modal: a CREATORS sidebar
+   (who's in the queue + per-creator progress — the fix for "confusing to go
+   from one creator to another"), a gradient stage with a "Draft n of N ·
+   {kind}" pill + the 9:16 player + a caption card, and a white right panel
+   ("Pre-approved, ready for your final review" + Katie's-team pre-checks +
+   the approve/flag footnote + CTAs). Every prior element carries over: the
+   real player (badge/sound/scrub), pre-check card, Tony's flag-an-issue
+   sheet (v43.2 copy — notes go to the Benable team), decided status rails,
+   feedback list, end-of-queue confetti.
 
-   Layout: left stage (gradient + 9:16 player + draft arrows) · right panel
-   (creator pager ‹ n/N ›, drafts carousel with type labels + lavender
-   selection ring + decision stamps, caption, Katie's-team pre-check card,
-   feedback) · footer CTAs that become a status rail once a draft is
-   decided · slide-up request-changes sheet · animated check overlay ·
-   end-of-queue confetti celebration. */
+   Decisions: same model — asset.state / asset.notes, module-persisted, the
+   tracker derives. On Approve (or flag-send) a check FLASH plays over the
+   stage (~1.1s), the draft SLIDES OUT left, and the next undecided draft
+   slides in from the right — this creator's next draft first, then the next
+   creator with drafts waiting, else the celebration. The sidebar counts
+   tick live. Amine's 1s skeletons retired here — the slide is the seam. */
 
 const B = import.meta.env.BASE_URL;
 const A = (p) => `${B}review/${p}`;
 
-/* Drafts carousel geometry: 85px thumbs, 10px gap, viewport to the panel edge. */
-const THUMB_STEP = 95;
-const CAROUSEL_VIEWPORT = 390;
-const CAROUSEL_END_PAD = 20;
+/* stage transition timing (ms) — flash holds long enough to read, the
+   slide is quick enough to feel like momentum */
+const FLASH_MS = 1150;
+const SLIDE_MS = 320;
 
 /* ---- caption tones: @mentions blue, #hashtags purple (from capLines) ---- */
 const capSegs = (line) =>
@@ -210,8 +212,8 @@ function Celebration({ queue, onClose }) {
   const sub = changes === 0
     ? `All ${all.length} approved — we’ll get them scheduled and send you the live links.`
     : approved === 0
-      ? 'Your notes are with the creators — we’ll email you as the new drafts land.'
-      : `${approved} approved and headed for scheduling, ${changes} back with creators for tweaks — we’ll email you when new drafts land.`;
+      ? 'Your notes are with our team — we’ll review and keep you posted.'
+      : `${approved} approved and headed for scheduling, ${changes} flagged for our team — we’ll review and keep you posted.`;
 
   return (
     <div className="rvm-celebrate-scrim" onClick={onClose}>
@@ -241,7 +243,7 @@ function Celebration({ queue, onClose }) {
   );
 }
 
-/* ---- the review modal --------------------------------------------------- */
+/* ---- the review shell --------------------------------------------------- */
 export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
   const mode = scene.mode;
   /* the queue = the table's review rows, in table order */
@@ -254,130 +256,106 @@ export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
 
   const initIdx = Math.max(0, queue.findIndex((c) => c.name === initial));
   const [creatorIdx, setCreatorIdx] = useState(initIdx);
-  /* "Finish review" re-entry lands on the first UNDECIDED draft, not draft 1 */
+  /* entry lands on the first UNDECIDED draft, not draft 1 */
   const [clipIdx, setClipIdx] = useState(() => {
     const j = queue[initIdx]?.assets.findIndex((a) => !a.state) ?? -1;
     return j >= 0 ? j : 0;
   });
   const [celebrating, setCelebrating] = useState(false);
-  const [confirming, setConfirming] = useState(null); // 'approved' | 'changes' | null
-  const [draftScroll, setDraftScroll] = useState(0);
+  /* stage motion: 'flash' (check over the stage) → 'out' (slide left) →
+     advance → fresh key slides in. null = at rest. */
+  const [flash, setFlash] = useState(null); // { decision } | null
+  const [leaving, setLeaving] = useState(false);
   const [changesOpen, setChangesOpen] = useState(false);
   const [changesText, setChangesText] = useState('');
-  const [skeleton, setSkeleton] = useState('none'); // none | video | full
   const changesRef = useRef(null);
-  const listRef = useRef(null);
-  const approveTimer = useRef(0);
-  /* the change note lands with the decision at commit time — never before,
-     so an aborted confirm can't leave an orphan note on the asset */
+  const timers = useRef([]);
   const pendingNote = useRef(null);
   const store = useMemo(() => new VideoTimeStore(), []);
 
   const creator = queue[Math.min(creatorIdx, queue.length - 1)];
   const clip = creator?.assets[Math.min(clipIdx, (creator?.assets.length ?? 1) - 1)];
-  const prevCreator = useRef(creatorIdx);
-  const prevClip = useRef(clip?.id);
 
-  /* 1s skeleton: full (details + video) on creator flips, video-only on clip flips */
-  useEffect(() => {
-    if (!clip || prevClip.current === clip.id) return undefined;
-    const full = prevCreator.current !== creatorIdx;
-    prevCreator.current = creatorIdx;
-    prevClip.current = clip.id;
-    setSkeleton(full ? 'full' : 'video');
-    const t = setTimeout(() => setSkeleton('none'), 1000);
-    return () => clearTimeout(t);
-  }, [clip?.id, creatorIdx]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => () => clearTimeout(approveTimer.current), []);
-
-  /* with more than four drafts the row overflows the panel; arrows page it */
-  const maxDraftScroll = Math.max(0, (creator?.assets.length ?? 0) * THUMB_STEP - 10 - (CAROUSEL_VIEWPORT - CAROUSEL_END_PAD));
-  const scrollDrafts = (dir) => setDraftScroll((s) => Math.min(maxDraftScroll, Math.max(0, s + dir * THUMB_STEP)));
-  useEffect(() => { setDraftScroll(0); }, [creatorIdx]);
-  useEffect(() => {
-    const left = clipIdx * THUMB_STEP;
-    const right = left + THUMB_STEP - 10;
-    setDraftScroll((s) => {
-      const visible = CAROUSEL_VIEWPORT - CAROUSEL_END_PAD;
-      if (left < s) return left;
-      if (right > s + visible) return Math.min(maxDraftScroll, right - visible);
-      return s;
-    });
-  }, [clipIdx, maxDraftScroll]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   /* fresh clip → fresh composer */
   useEffect(() => { setChangesOpen(false); setChangesText(''); }, [clip?.id]);
 
-  const notes = clip?.notes ?? [];
+  /* if the queue changes under the open shell (demo toggles), re-seat */
   useEffect(() => {
-    const list = listRef.current;
-    if (list) list.scrollTop = list.scrollHeight;
-  }, [notes.length]);
+    if (creator && clipIdx >= creator.assets.length) setClipIdx(0);
+  }, [creator, clipIdx]);
 
-  /* keyboard: Esc closes sheet → modal; arrows flip drafts when not typing */
+  const busy = !!flash || leaving;
+
+  /* keyboard: Esc closes sheet → shell; arrows flip drafts when not typing */
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        /* the 2.5s check overlay owns the moment — closing would cancel the
-           deferred commit and silently discard the decision */
-        if (confirming) return;
+        if (busy) return; // the decision moment owns the stage
         if (changesOpen) { setChangesOpen(false); return; }
         onClose();
         return;
       }
-      /* the day scrubber can pull the queue out from under an open modal */
-      if (celebrating || confirming || !creator) return;
-      const typing = document.activeElement?.tagName === 'TEXTAREA';
-      if (typing) return;
+      if (celebrating || busy || !creator) return;
+      if (document.activeElement?.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowRight' && clipIdx < creator.assets.length - 1) setClipIdx(clipIdx + 1);
       if (e.key === 'ArrowLeft' && clipIdx > 0) setClipIdx(clipIdx - 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, clipIdx, creator?.assets.length, changesOpen, celebrating, confirming]);
-
-  /* if the queue changes under the open modal (demo toggles), re-seat indices */
-  useEffect(() => {
-    if (creator && clipIdx >= creator.assets.length) setClipIdx(0);
-  }, [creator, clipIdx]);
+  }, [onClose, clipIdx, creator?.assets.length, changesOpen, celebrating, busy]);
 
   if (!creator || !clip) return null;
 
   const decided = clip.state; // 'approved' | 'changes' | undefined — locked once set
   const name = creator.name;
-  const goToCreator = (idx) => { setCreatorIdx(idx); setClipIdx(0); };
+  const undecidedCreators = queue.filter((c) => c.assets.some((a) => !a.state)).length;
 
-  /* decisions land on the asset (module-persisted) and the whole page
-     re-derives; then advance to the next undecided draft — this creator
-     first, then the next creator with drafts waiting (wrapping), else the
-     queue is done and the celebration takes over. */
-  const commit = (decision) => {
+  const later = (fn, ms) => { timers.current.push(window.setTimeout(fn, ms)); };
+
+  /* jump helpers — sidebar rows land on the creator's first pending draft */
+  const openCreator = (i) => {
+    if (busy || i === creatorIdx) return;
+    const j = queue[i].assets.findIndex((a) => !a.state);
+    setCreatorIdx(i);
+    setClipIdx(j >= 0 ? j : 0);
+  };
+
+  /* the decision moment: commit → flash the check over the stage → slide the
+     draft out → land on the next undecided draft (this creator first, then
+     the next creator with drafts waiting, wrapping) → else celebrate */
+  const decide = (decision) => {
+    if (busy || decided) return;
     if (decision === 'changes' && pendingNote.current) {
       clip.notes = [...(clip.notes ?? []), pendingNote.current];
       pendingNote.current = null;
     }
     clip.state = decision;
     onDecide();
-    for (let off = 1; off < creator.assets.length; off++) {
-      const i = (clipIdx + off) % creator.assets.length;
-      if (!creator.assets[i].state) { setClipIdx(i); return; }
-    }
-    for (let off = 1; off <= queue.length; off++) {
-      const i = (creatorIdx + off) % queue.length;
-      const j = queue[i].assets.findIndex((a) => !a.state);
-      if (j >= 0) { setCreatorIdx(i); setClipIdx(j); return; }
-    }
-    setCelebrating(true);
-  };
-
-  /* animated check overlay — long enough to read, then the decision lands */
-  const confirmDecision = (decision) => {
-    setConfirming(decision);
-    approveTimer.current = window.setTimeout(() => {
-      setConfirming(null);
-      commit(decision);
-    }, 2500);
+    setFlash({ decision });
+    later(() => {
+      // find the landing spot before sliding out
+      let nextC = -1;
+      let nextJ = -1;
+      for (let off = 0; off <= queue.length; off++) {
+        const i = (creatorIdx + off) % queue.length;
+        const j = queue[i].assets.findIndex((a) => !a.state);
+        if (j >= 0) { nextC = i; nextJ = j; break; }
+      }
+      if (nextC < 0) {
+        setFlash(null);
+        setCelebrating(true);
+        return;
+      }
+      setLeaving(true);
+      later(() => {
+        setFlash(null);
+        setLeaving(false);
+        setCreatorIdx(nextC);
+        setClipIdx(nextJ);
+      }, SLIDE_MS);
+    }, FLASH_MS);
   };
 
   const submitChanges = () => {
@@ -386,7 +364,19 @@ export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
     pendingNote.current = text;
     setChangesOpen(false);
     setChangesText('');
-    confirmDecision('changes');
+    decide('changes');
+  };
+
+  const notes = clip.notes ?? [];
+
+  /* sidebar face per creator */
+  const sideFace = (c) => {
+    const n = c.assets.length;
+    const done = c.assets.filter((a) => a.state).length;
+    const flagged = c.assets.some((a) => a.state === 'changes');
+    if (done === 0) return { line: `${n} draft${n > 1 ? 's' : ''} to review`, state: 'pending' };
+    if (done < n) return { line: `${done} of ${n} reviewed`, state: 'pending' };
+    return { line: flagged ? 'Reviewed — issue flagged' : 'Reviewed', state: flagged ? 'flagged' : 'done' };
   };
 
   return createPortal(
@@ -394,219 +384,206 @@ export function ReviewModal({ scene, rows, initial, onClose, onDecide }) {
       {celebrating ? (
         <Celebration queue={queue} onClose={onClose} />
       ) : (
-      <div className="rvm-review-overlay" onClick={() => { if (!confirming) onClose(); }}>
-        <div className="rvm-review-modal" onClick={(e) => e.stopPropagation()}>
-          {/* left stage: gradient + video + draft navigation */}
-          <div className="rvm-review-stage">
-            <div className="rvm-stage-gradient-clip" aria-hidden>
-              <img src={A('assets/modal/gradient-bg.png')} alt="" className="rvm-stage-gradient" />
-            </div>
-            {skeleton === 'none' ? (
-              <VideoPane key={clip.id} clip={clip} store={store} />
-            ) : (
-              <div className="rvm-video-frame rvm-video-skeleton"><div className="rvm-skeleton-shimmer" /></div>
-            )}
-            <button
-              type="button"
-              className={`rvm-stage-nav rvm-stage-nav-prev${clipIdx > 0 ? '' : ' is-disabled'}`}
-              disabled={clipIdx <= 0}
-              onClick={() => setClipIdx(clipIdx - 1)}
-              title="Previous draft"
-            >
-              <span className="rvm-chev rvm-chev-left"><img src={A('assets/icons/chevron-shape.svg')} alt="" /></span>
-            </button>
-            <button
-              type="button"
-              className={`rvm-stage-nav rvm-stage-nav-next${clipIdx < creator.assets.length - 1 ? '' : ' is-disabled'}`}
-              disabled={clipIdx >= creator.assets.length - 1}
-              onClick={() => setClipIdx(clipIdx + 1)}
-              title="Next draft"
-            >
-              <span className="rvm-chev"><img src={A('assets/icons/chevron-shape.svg')} alt="" /></span>
-            </button>
-          </div>
+      <div className="rvm-shell-overlay">
+        <div className="rvm-shell" role="dialog" aria-modal="true" aria-label="Approve content">
 
-          {/* right panel */}
-          <div className="rvm-review-panel">
-            <div className="rvm-panel-topbar">
-              <p className="rvm-topbar-title">Review</p>
-              <div className="rvm-topbar-nav">
-                <button type="button" className="rvm-topbar-arrow" disabled={creatorIdx === 0} onClick={() => goToCreator(creatorIdx - 1)} title="Previous creator">
+          {/* ---- header ---- */}
+          <header className="rvm-shell-head">
+            <div>
+              <p className="rvm-shell-title">Approve Content</p>
+              <p className="rvm-shell-sub">
+                {undecidedCreators > 0
+                  ? `${undecidedCreators} creator${undecidedCreators > 1 ? 's have' : ' has'} drafts ready for your review`
+                  : 'All drafts reviewed'}
+              </p>
+            </div>
+            <button type="button" className="rvm-shell-close" onClick={onClose} title="Close">
+              <img src={A('assets/icons/close-16.svg')} alt="" />
+            </button>
+          </header>
+
+          <div className="rvm-shell-body">
+
+            {/* ---- creators sidebar ---- */}
+            <aside className="rvm-shell-side">
+              <p className="rvm-side-label">Creators</p>
+              {queue.map((c, i) => {
+                const face = sideFace(c);
+                return (
+                  <button
+                    key={c.name}
+                    type="button"
+                    className={`rvm-side-row${i === creatorIdx ? ' is-active' : ''}`}
+                    onClick={() => openCreator(i)}
+                  >
+                    <span className="rvm-side-avatar"><img src={c.avatar} alt="" /></span>
+                    <span className="rvm-side-names">
+                      <span className="rvm-side-name">
+                        {c.name}
+                        <img src={A('assets/icons/verified.svg')} alt="" className="rvm-side-verified" />
+                      </span>
+                      <span className="rvm-side-line">{face.line}</span>
+                    </span>
+                    {face.state === 'pending' ? (
+                      <span className="rvm-side-dot" aria-label="Waiting on you" />
+                    ) : face.state === 'flagged' ? (
+                      <img src={A('assets/icons/draft-changes.svg')} alt="Issue flagged" className="rvm-side-stamp" />
+                    ) : (
+                      <img src={A('assets/icons/draft-approved.svg')} alt="Reviewed" className="rvm-side-stamp" />
+                    )}
+                  </button>
+                );
+              })}
+            </aside>
+
+            {/* ---- stage ---- */}
+            <div className="rvm-shell-stage">
+              <div className="rvm-stage-gradient-clip" aria-hidden>
+                <img src={A('assets/modal/gradient-bg.png')} alt="" className="rvm-stage-gradient" />
+              </div>
+
+              {/* draft pill — the in-creator navigation */}
+              <div className="rvm-stage-pill">
+                <button
+                  type="button"
+                  className="rvm-pill-arrow"
+                  disabled={busy || clipIdx <= 0}
+                  onClick={() => setClipIdx(clipIdx - 1)}
+                  title="Previous draft"
+                >
                   <img src={A('assets/icons/chevron-12.svg')} alt="" className="rvm-chev12-left" />
                 </button>
-                <button type="button" className="rvm-topbar-arrow" disabled={creatorIdx === queue.length - 1} onClick={() => goToCreator(creatorIdx + 1)} title="Next creator">
+                <span className="rvm-pill-label">
+                  Draft {clipIdx + 1} of {creator.assets.length} · {clip.kind}
+                  {decided && (
+                    <img
+                      src={A(`assets/icons/${decided === 'approved' ? 'draft-approved' : 'draft-changes'}.svg`)}
+                      alt=""
+                      className="rvm-pill-stamp"
+                    />
+                  )}
+                </span>
+                <button
+                  type="button"
+                  className="rvm-pill-arrow"
+                  disabled={busy || clipIdx >= creator.assets.length - 1}
+                  onClick={() => setClipIdx(clipIdx + 1)}
+                  title="Next draft"
+                >
                   <img src={A('assets/icons/chevron-12.svg')} alt="" />
                 </button>
               </div>
-              <p className="rvm-topbar-count">{creatorIdx + 1}/{queue.length}</p>
-              <button type="button" className="rvm-topbar-close" onClick={onClose} title="Close">
-                <img src={A('assets/icons/close-16.svg')} alt="" />
-              </button>
-            </div>
 
-            <div className="rvm-panel-scroll" ref={listRef}>
-              {skeleton === 'full' ? (
-                <div aria-hidden>
-                  <div className="rvm-panel-creator">
-                    <span className="rvm-skeleton-block rvm-skeleton-avatar" />
-                    <span className="rvm-panel-creator-names">
-                      <span className="rvm-skeleton-block rvm-skeleton-line" style={{ width: 120 }} />
-                      <span className="rvm-skeleton-block rvm-skeleton-line rvm-skeleton-line-thin" style={{ width: 72, marginTop: 5 }} />
-                    </span>
-                  </div>
-                  <div className="rvm-drafts-header">
-                    <span className="rvm-skeleton-block rvm-skeleton-line rvm-skeleton-line-thin" style={{ width: 52 }} />
-                  </div>
-                  <div className="rvm-drafts-carousel">
-                    <div className="rvm-drafts-track">
-                      {creator.assets.map((a) => <span key={a.id} className="rvm-skeleton-block rvm-draft-thumb-skeleton" />)}
-                    </div>
-                  </div>
-                  <div className="rvm-panel-caption">
-                    <span className="rvm-skeleton-block rvm-skeleton-line rvm-skeleton-line-thin" style={{ width: 48 }} />
-                    <span className="rvm-skeleton-block rvm-skeleton-line" style={{ width: '100%', marginTop: 8 }} />
-                    <span className="rvm-skeleton-block rvm-skeleton-line" style={{ width: '92%', marginTop: 6 }} />
-                    <span className="rvm-skeleton-block rvm-skeleton-line" style={{ width: '65%', marginTop: 6 }} />
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div className="rvm-panel-creator">
-                    <span className="rvm-panel-creator-avatar"><img src={creator.avatar} alt="" /></span>
-                    <span className="rvm-panel-creator-names">
-                      <span className="rvm-panel-creator-name-line">
-                        <span className="rvm-panel-creator-name">{name}</span>
-                        <img src={A('assets/icons/verified.svg')} alt="" className="rvm-panel-creator-verified" />
-                      </span>
-                      <span className="rvm-panel-creator-handle">{creator.handle}</span>
-                    </span>
-                  </div>
-                  <div className="rvm-drafts-header">
-                    <p className="rvm-panel-drafts-title">
-                      Drafts <span className="rvm-drafts-count">({creator.assets.length})</span>
-                    </p>
-                    {creator.assets.length > 4 && (
-                      <div className="rvm-drafts-nav">
-                        <button type="button" className="rvm-drafts-arrow" disabled={draftScroll <= 0} onClick={() => scrollDrafts(-1)} title="Previous drafts">
-                          <img src={A('assets/icons/chevron-12.svg')} alt="" className="rvm-chev12-left" />
-                        </button>
-                        <button type="button" className="rvm-drafts-arrow" disabled={draftScroll >= maxDraftScroll} onClick={() => scrollDrafts(1)} title="More drafts">
-                          <img src={A('assets/icons/chevron-12.svg')} alt="" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="rvm-drafts-carousel">
-                    <div className="rvm-drafts-track" style={{ transform: `translateX(${-draftScroll}px)` }}>
-                      {creator.assets.map((a, i) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          className={`rvm-draft-thumb${i === clipIdx ? ' is-selected' : ''}${a.state ? ' is-decided' : ''}`}
-                          title={`Draft ${i + 1}`}
-                          onClick={() => setClipIdx(i)}
-                        >
-                          <img src={a.poster} alt="" className="rvm-draft-thumb-img" />
-                          <span className="rvm-draft-thumb-dim" />
-                          <img src={A('assets/icons/thumb-play.svg')} alt="" className="rvm-draft-thumb-play" />
-                          {a.state && (
-                            <img
-                              src={A(`assets/icons/${a.state === 'approved' ? 'draft-approved' : 'draft-changes'}.svg`)}
-                              alt={a.state === 'approved' ? 'Approved' : 'Changes requested'}
-                              className="rvm-draft-thumb-icon"
-                            />
-                          )}
-                          <span className="rvm-draft-thumb-label">{a.kind}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rvm-panel-caption">
-                    <p className="rvm-panel-caption-label">Caption</p>
-                    <div className="rvm-panel-caption-body">
-                      {(clip.capLines ?? [clip.caption]).map((line, i) => (
-                        <p key={i}>
-                          {capSegs(line).map((seg, j) => (
-                            <span key={j} className={seg.tone ? `rvm-caption-${seg.tone}` : undefined}>{seg.text}</span>
-                          ))}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* pre-checks + feedback share the flow area under the caption */}
-              {skeleton !== 'full' && (
-                <div className="rvm-panel-below">
-                  <div className="rvm-precheck">
-                    <p className="rvm-precheck-title">Katie’s team pre-checked</p>
-                    <ul className="rvm-precheck-list">
-                      {clip.checks.map((check) => (
-                        <li key={check} className="rvm-precheck-item">
-                          <img src={A('assets/icons/precheck-tick.svg')} alt="" className="rvm-precheck-tick" />
-                          {check}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {notes.length > 0 && (
-                    <>
-                      <div className="rvm-panel-feedback-head">
-                        <p className="rvm-panel-feedback-title">Your feedback</p>
-                      </div>
-                      <div className="rvm-feedback-list">
-                        {notes.map((text, i) => (
-                          <div key={i} className="rvm-feedback-message">
-                            <span className="rvm-feedback-message-text">{text}</span>
-                          </div>
+              {/* the draft itself — keyed so a fresh one slides in */}
+              <div key={clip.id} className={`rvm-stage-content${leaving ? ' is-leaving' : ''}`}>
+                <VideoPane clip={clip} store={store} />
+                <div className="rvm-stage-caption">
+                  <p className="rvm-stage-caption-label">Caption</p>
+                  <div className="rvm-stage-caption-body">
+                    {(clip.capLines ?? [clip.caption]).map((line, i) => (
+                      <p key={i}>
+                        {capSegs(line).map((seg, j) => (
+                          <span key={j} className={seg.tone ? `rvm-caption-${seg.tone}` : undefined}>{seg.text}</span>
                         ))}
-                      </div>
-                    </>
-                  )}
+                      </p>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* footer: CTAs while undecided; a status rail once decided (v6) */}
-            <div className={`rvm-panel-footer${decided ? ' is-decided' : ''}`}>
-              {decided === 'approved' ? (
-                <p className="rvm-footer-status rvm-footer-status-approved"><strong>🎉 </strong>Approved</p>
-              ) : decided === 'changes' ? (
-                <p className="rvm-footer-status rvm-footer-status-sent">
-                  <strong>Issue flagged </strong>for our team — we’ll review and keep you posted.
-                </p>
-              ) : (
-                <div className="rvm-panel-footer-cta">
-                  <button type="button" className="rvm-footer-changes" disabled={!!confirming} onClick={() => setChangesOpen(true)}>
-                    Flag an issue
-                  </button>
-                  <button type="button" className="rvm-footer-approve" disabled={!!confirming} onClick={() => confirmDecision('approved')}>
-                    Approve
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {confirming && (
-              <div className="rvm-approve-overlay">
-                <svg className="rvm-approve-check" viewBox="0 0 64 64" fill="none">
-                  <circle className="rvm-approve-check-circle" cx="32" cy="32" r="29" stroke="#3caa70" strokeWidth="4" />
-                  <path className="rvm-approve-check-mark" d="M20 33.5 28.5 42 44 24.5" stroke="#3caa70" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <p className="rvm-approve-overlay-title">
-                  {confirming === 'approved' ? `Approved — ${name} will post it within days.` : 'Sent to our team.'}
-                </p>
-                <p className="rvm-approve-overlay-sub">
-                  {confirming === 'approved'
-                    ? 'We’ll tell her the good news and track the post for you.'
-                    : 'We’ll review it and work out the best solution with the creator directly.'}
-                </p>
               </div>
-            )}
+
+              {/* decision flash — the check pops over the stage, then the slide */}
+              {flash && (
+                <div className="rvm-stage-flash" aria-hidden>
+                  <div className="rvm-flash-card">
+                    <svg className="rvm-flash-check" viewBox="0 0 64 64" fill="none">
+                      <circle className="rvm-approve-check-circle" cx="32" cy="32" r="29" stroke={flash.decision === 'approved' ? '#3caa70' : '#f0a32e'} strokeWidth="4" />
+                      <path className="rvm-approve-check-mark" d="M20 33.5 28.5 42 44 24.5" stroke={flash.decision === 'approved' ? '#3caa70' : '#f0a32e'} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p className="rvm-flash-title">
+                      {flash.decision === 'approved' ? 'Approved' : 'Sent to our team'}
+                    </p>
+                    <p className="rvm-flash-sub">
+                      {flash.decision === 'approved'
+                        ? `${name} will post it within days.`
+                        : 'We’ll review it and keep you posted.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ---- right panel ---- */}
+            <div className="rvm-shell-panel">
+              <div className="rvm-panel-copy">
+                <h2 className="rvm-panel-h">
+                  {decided === 'approved' ? 'Approved 🎉'
+                    : decided === 'changes' ? 'Issue flagged'
+                    : 'Pre-approved, ready for your final review'}
+                </h2>
+                <p className="rvm-panel-hsub">
+                  {decided === 'approved' ? `${name} can schedule this post — we’ll track it for you.`
+                    : decided === 'changes' ? 'Our team is on it — we’ll review and keep you posted.'
+                    : 'Katie’s team checked this draft against your brief before it reached you.'}
+                </p>
+
+                <div className="rvm-precheck">
+                  <p className="rvm-precheck-title">Katie’s team pre-checked</p>
+                  <ul className="rvm-precheck-list">
+                    {clip.checks.map((check) => (
+                      <li key={check} className="rvm-precheck-item">
+                        <img src={A('assets/icons/precheck-tick.svg')} alt="" className="rvm-precheck-tick" />
+                        {check}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {notes.length > 0 && (
+                  <>
+                    <div className="rvm-panel-feedback-head">
+                      <p className="rvm-panel-feedback-title">Your note to our team</p>
+                    </div>
+                    <div className="rvm-feedback-list">
+                      {notes.map((text, i) => (
+                        <div key={i} className="rvm-feedback-message">
+                          <span className="rvm-feedback-message-text">{text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {!decided && (
+                  <p className="rvm-panel-footnote">
+                    Approving lets {name} schedule this post. Flag an issue and our team will
+                    work through it with her.
+                  </p>
+                )}
+              </div>
+
+              {/* footer: CTAs while undecided; a status rail once decided */}
+              <div className={`rvm-shell-foot${decided ? ' is-decided' : ''}`}>
+                {decided === 'approved' ? (
+                  <p className="rvm-footer-status rvm-footer-status-approved"><strong>🎉 </strong>Approved</p>
+                ) : decided === 'changes' ? (
+                  <p className="rvm-footer-status rvm-footer-status-sent">
+                    <strong>Issue flagged </strong>for our team — we’ll review and keep you posted.
+                  </p>
+                ) : (
+                  <>
+                    <button type="button" className="rvm-foot-flag" disabled={busy} onClick={() => setChangesOpen(true)}>
+                      Flag an issue
+                    </button>
+                    <button type="button" className="rvm-foot-approve" disabled={busy} onClick={() => decide('approved')}>
+                      Approve
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* request-changes sheet (Figma 12324:2042, v6) */}
+          {/* flag-an-issue sheet (Tony's v43.2 copy) — slides up over the panel */}
           {changesOpen && (
             <div className="rvm-changes-scrim" onClick={() => setChangesOpen(false)}>
               <div className="rvm-changes-card" onClick={(e) => e.stopPropagation()}>

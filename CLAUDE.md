@@ -6,6 +6,28 @@ its own URL as the shared ship; new work goes here. Dev: launch
 `brand-prototype-v45`, port 5223. Live: https://juliabenable.github.io/benable-brand-prototype-v45/
 Deploy: `bash scripts/ship.sh "msg"`. Everything below is inherited v43 history.
 
+**v45 REVIEW SHELL (Julia's mock, Aug 18) — reviewModal.jsx rebuilt as a
+three-pane workspace** (solves "confusing to go from one creator to another
+and through one creator's drafts"): header "Approve Content" + live sub ·
+CREATORS sidebar (photo rows, per-creator lines "2 drafts to review" → "1 of
+2 reviewed" → "Reviewed — issue flagged"/"Reviewed", amber dot → stamp,
+active row lavender + accent bar; click = jump to that creator's first
+pending draft) · gradient stage with a "Draft n of N · {kind}" glass pill
+(‹ › arrows + decision stamp) + the shared 9:16 player + a white CAPTION
+card · right panel ("Pre-approved, ready for your final review" / "Approved
+🎉" / "Issue flagged" heading variants, pre-check card, "Your note to our
+team" feedback list, approve/flag footnote, footer CTAs → decided rails).
+DECISION CHOREOGRAPHY: commit → check FLASH over the stage (1.15s, green
+approve / amber flag, rvm-flash-*) → draft slides OUT left (320ms) → next
+undecided draft slides IN from the right (this creator first, then next
+creator w/ pending, wrapping) → else confetti celebration. Amine's 1s
+skeletons + drafts thumbnail carousel + creator pager retired in the shell
+(sidebar + pill replace them); the old two-pane rvm- classes remain in
+reviewModal.css for reference. Flag sheet = Tony's v43.2 copy, anchored
+392px over the right panel. Keyboard: Esc (sheet→shell, blocked mid-flash),
+←/→ drafts. Entry lands on first undecided; "See what you sent ↗" drawer
+door reopens decided states.
+
 
 **v43.1 (Aug 17) — review direction C: AMINE'S MODAL, the new default.** The
 designer redid the review design (private repo `AmineBenjil/brand-portal-review-content`,

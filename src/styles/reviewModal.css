@@ -1356,3 +1356,489 @@ body:has(.rvm) {
 .rvm-celebrate-cta:hover {
   opacity: 0.9;
 }
+
+/* ============================================================
+   v45 SHELL (Julia's mock, Aug 18) — three-pane review workspace:
+   header · creators sidebar · gradient stage (draft pill + player +
+   caption card) · right panel. Reuses the rvm- pieces above (player,
+   pre-check card, flag sheet, rails, celebration). The old two-pane
+   modal classes above are retired but kept for reference.
+   ============================================================ */
+
+.rvm-shell-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  animation: rvm-approve-fade 0.2s ease;
+}
+
+.rvm-shell {
+  position: relative;
+  width: calc(100vw - 56px);
+  max-width: 1460px;
+  height: calc(100vh - 56px);
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0px 24px 64px 0px rgba(0, 0, 0, 0.28);
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- header ---- */
+
+.rvm-shell-head {
+  flex: none;
+  height: 76px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ececf1;
+}
+
+.rvm-shell-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: #1c1c1c;
+}
+
+.rvm-shell-sub {
+  margin-top: 3px;
+  font-size: 13px;
+  color: #717171;
+}
+
+.rvm-shell-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.rvm-shell-close:hover {
+  background: #f4f4f6;
+}
+
+.rvm-shell-close img {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---- body grid ---- */
+
+.rvm-shell-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr) 400px;
+}
+
+/* ---- creators sidebar ---- */
+
+.rvm-shell-side {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 14px;
+  border-right: 1px solid #ececf1;
+  scrollbar-width: thin;
+}
+
+.rvm-side-label {
+  padding: 0 12px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+
+.rvm-side-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: left;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.rvm-side-row:hover {
+  background: #f7f7fb;
+}
+
+.rvm-side-row.is-active {
+  background: #f3f0ff;
+}
+
+/* active accent bar on the row's leading edge */
+.rvm-side-row.is-active::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent-bg);
+}
+
+.rvm-side-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rvm-side-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rvm-side-names {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rvm-side-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1c1c1c;
+  white-space: nowrap;
+}
+
+.rvm-side-verified {
+  width: 14px;
+  height: 14px;
+}
+
+.rvm-side-line {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #717171;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rvm-side-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f0a32e;
+}
+
+.rvm-side-stamp {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.18));
+}
+
+/* ---- stage ---- */
+
+.rvm-shell-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* draft pill — in-creator navigation, floats over the gradient */
+.rvm-stage-pill {
+  position: relative;
+  z-index: 3;
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.rvm-pill-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(60, 30, 120, 0.25);
+}
+
+.rvm-pill-stamp {
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.2));
+}
+
+.rvm-pill-arrow {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.rvm-pill-arrow:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.rvm-pill-arrow:disabled {
+  opacity: 0.35;
+}
+
+.rvm-pill-arrow img {
+  width: 5.3px;
+  height: 10px;
+  filter: brightness(0) invert(1);
+}
+
+/* the draft (player + caption) — keyed, slides in fresh / out on decide */
+.rvm-stage-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 24px 24px;
+  animation: rvm-stage-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rvm-stage-content.is-leaving {
+  animation: rvm-stage-out 0.32s cubic-bezier(0.5, 0, 0.75, 0.4) both;
+}
+
+@keyframes rvm-stage-in {
+  from {
+    opacity: 0;
+    transform: translateX(64px);
+  }
+}
+
+@keyframes rvm-stage-out {
+  to {
+    opacity: 0;
+    transform: translateX(-64px);
+  }
+}
+
+/* the shared video frame loses its old absolute anchoring inside the shell
+   and scales to the viewport instead */
+.rvm-shell .rvm-video-frame {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  flex: none;
+  height: clamp(400px, calc(100vh - 420px), 598px);
+  width: auto;
+  aspect-ratio: 336 / 598;
+}
+
+.rvm-stage-caption {
+  width: min(440px, 92%);
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  padding: 13px 18px 15px;
+  box-shadow: 0 10px 28px rgba(40, 20, 90, 0.18);
+}
+
+.rvm-stage-caption-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+
+.rvm-stage-caption-body {
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #1c1c1c;
+}
+
+/* decision flash — the check moment before the slide */
+.rvm-stage-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(70, 45, 130, 0.28);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  animation: rvm-approve-fade 0.18s ease;
+}
+
+.rvm-flash-card {
+  min-width: 240px;
+  max-width: 300px;
+  padding: 26px 28px 24px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0px 18px 48px rgba(20, 10, 50, 0.3);
+  text-align: center;
+  animation: rvm-approve-pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.rvm-flash-check {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+}
+
+.rvm-flash-title {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1c;
+}
+
+.rvm-flash-sub {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 17px;
+  color: #717171;
+}
+
+/* ---- right panel ---- */
+
+.rvm-shell-panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #ececf1;
+}
+
+.rvm-panel-copy {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 24px 14px;
+  scrollbar-width: thin;
+}
+
+.rvm-panel-h {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 23px;
+  letter-spacing: -0.2px;
+  color: #1c1c1c;
+}
+
+.rvm-panel-hsub {
+  margin: 6px 0 16px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #717171;
+}
+
+.rvm-panel-copy .rvm-panel-feedback-head {
+  margin-top: 14px;
+}
+
+.rvm-panel-footnote {
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #9a9a9a;
+}
+
+/* ---- panel footer ---- */
+
+.rvm-shell-foot {
+  flex: none;
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid #ececf1;
+}
+
+.rvm-foot-flag {
+  flex: none;
+  height: 44px;
+  padding: 0 18px;
+  background: #fff;
+  border: 1px solid var(--default-border-base);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--default-text-base);
+  white-space: nowrap;
+  transition: border-color 0.15s ease;
+}
+
+.rvm-foot-flag:not(:disabled):hover {
+  border-color: var(--default-border-subtle);
+}
+
+.rvm-foot-approve {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  background: var(--accent-bg);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--default-text-inverse);
+  transition: background 0.15s ease;
+}
+
+.rvm-foot-approve:not(:disabled):hover {
+  background: #6a4cf0;
+}
+
+.rvm-foot-flag:disabled,
+.rvm-foot-approve:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rvm-shell-foot.is-decided {
+  min-height: 82px;
+  background: #f9f9f9;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the flag sheet anchors over the right panel inside the shell */
+.rvm-shell .rvm-changes-card {
+  width: 392px;
+}
