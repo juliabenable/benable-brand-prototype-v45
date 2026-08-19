@@ -67,8 +67,19 @@ mixed "🚩 Issue on her story — reel approved" (reviewRowFace); stage stays
 Visited; drawer stage-4 next-hint for flagged rows = "We're resolving your
 flag — then she posts" (tableFix); the drawer's "See what you sent ↗" stays
 the door. Header light goes green when only flags remain (ball is with
-Benable). NOT built: the resolution return-state (new draft back in →
-amber review face again) — no demo data for it yet. Tracker speaks
+Benable). RESOLUTION LIFECYCLE (Julia's call, Aug 18 late): NO second draft, NO
+re-review — Katie's team settles it with the creator and she PUBLISHES
+DIRECTLY; the flag must close loudly. Flagged assets carry `fix`:
+undefined → 'agreed' → 'resolved' (review.jsx setFlagBeat/flagBeat; the
+FLAG DEMO pill group appears in the demo bar once something is flagged and
+steps ALL flagged assets through the beats). Faces (reviewRowFace):
+beat 1 "🚩 Issue flagged — Katie's team is on it" / mixed "🚩 Issue on her
+reel — story approved" · beat 2 "✅ Fix agreed — she's updating it before
+posting" (rowReviewState stays 'changes') · beat 3 = state 'resolved':
+"✅ Issue resolved — updated post going live soon", stageOf advances the row
+to stage 4 like an approval. Drawer stage-4: beat-aware next-hints + done
+line "Issue resolved with Katie's team ✓". Shell: panel heading/rail and
+sidebar line/tick walk the same beats (resolved = green tick). Tracker speaks
 "Katie's team" while Tony's modal says "our team" — flagged to Julia,
 left as-is.
 
