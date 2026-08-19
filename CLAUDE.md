@@ -46,7 +46,19 @@ inline-SVG tick · amber ! for flagged — the ring-in-a-ring draft-approved.svg
 read weird) in a fixed 22px slot so tick and amber dot share an axis; flag
 sheet now centers in the RIGHT-HAND PANEL BOX (grid scrim align-center
 justify-end pr16 + pt76 header offset, card 368px) — not the whole shell —
-and the footer rail line/tint before "Send to our team" is gone.
+and the footer rail line/tint before "Send to our team" is gone. ROUND 3
+(Julia, Aug 18 latest): header hierarchy fixed (title lh26 + 4px to the
+14/18 sub, head 80px, sidebar padding 16 so title/label-text/avatars all sit
+on the 28px left axis) · "Every draft reviewed" CELEBRATION REMOVED — the
+last decision's flash closes the shell and the table's derived states carry
+the ending (celebrate/confetti CSS pruned) · flag sheet rides LOW in the
+panel (align-end + 16px insets) · the opening draft appears IN PLACE — the
+slide-in is gated behind an rvm-anim class set only on draft/creator changes
+(lastKey ref; the first mount arriving from the side read as a loading
+state) · media pre-warmed (posters from the dashboard, clips preload=auto on
+mount) · self-check extras: pill arrows only render when a creator has >1
+draft, and the pill's decision stamp is the same single-circle tick language
+as the sidebar (ring-in-ring img retired everywhere).
 
 
 **v43.1 (Aug 17) — review direction C: AMINE'S MODAL, the new default.** The
