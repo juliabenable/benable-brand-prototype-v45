@@ -58,7 +58,19 @@ slide-in is gated behind an rvm-anim class set only on draft/creator changes
 state) · media pre-warmed (posters from the dashboard, clips preload=auto on
 mount) · self-check extras: pill arrows only render when a creator has >1
 draft, and the pill's decision stamp is the same single-circle tick language
-as the sidebar (ring-in-ring img retired everywhere).
+as the sidebar (ring-in-ring img retired everywhere). FLAGGED-ROW TRACKER
+FACE (Option A, Julia-approved Aug 18): the old "✏️ One tweak sent — she's
+re-editing" claimed creator behavior and the wrong recipient under Tony's
+flag model — now flagged rows read as motion in KATIE'S TEAM's hands, never
+amber, no CTA: all-flagged "🚩 Issue flagged — Katie's team is on it",
+mixed "🚩 Issue on her story — reel approved" (reviewRowFace); stage stays
+Visited; drawer stage-4 next-hint for flagged rows = "We're resolving your
+flag — then she posts" (tableFix); the drawer's "See what you sent ↗" stays
+the door. Header light goes green when only flags remain (ball is with
+Benable). NOT built: the resolution return-state (new draft back in →
+amber review face again) — no demo data for it yet. Tracker speaks
+"Katie's team" while Tony's modal says "our team" — flagged to Julia,
+left as-is.
 
 
 **v43.1 (Aug 17) — review direction C: AMINE'S MODAL, the new default.** The
