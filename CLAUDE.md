@@ -27,6 +27,18 @@ resolution outcome needs TWO endings in the real schema: publish_directly
 (default, built) OR back_to_review (asset returns to pending as a new
 version → amber face again; not built, spec-only). Failure branches
 (creator refuses fix, disputes) stay OPEN/off-system per Tony.
+**KATIE'S ADMIN FLOW (Julia, Aug 20 — the flag pipeline v1):** brand flags →
+immediate Slack notification to Katie + the flag appears in admin. Katie has
+THREE buttons: (a) Send the feedback to the creator as-is · (b) Edit the
+text, then send · (c) Mark as Resolved. Sending feedback (a or b) moves the
+asset to FIX AGREED; (c) moves it to RESOLVED; and POST DETECTION (the same
+signal that drives the Live stage) AUTO-RESOLVES an open flag when the
+creator's updated post goes live. Tony's back-to-brand re-review case stays
+manual/off-system for now (Katie handles one-off, per his don't-hard-code
+call) — the schema keeps the back_to_review ending open for later. Brand
+gets ONE email at resolved (Julia asking eng) — loud close, no beat spam.
+Stage word for resolved rows = "Draft Issue Resolved" (renamed from
+"Resolved", Julia Aug 20).
 
 **v45 REVIEW SHELL (Julia's mock, Aug 18) — reviewModal.jsx rebuilt as a
 three-pane workspace** (solves "confusing to go from one creator to another
