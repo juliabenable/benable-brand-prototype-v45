@@ -6,6 +6,28 @@ its own URL as the shared ship; new work goes here. Dev: launch
 `brand-prototype-v45`, port 5223. Live: https://juliabenable.github.io/benable-brand-prototype-v45/
 Deploy: `bash scripts/ship.sh "msg"`. Everything below is inherited v43 history.
 
+**ENGINEERING DECISIONS (Julia, Aug 20, from the edge-case audit):**
+(1) Review deadline = SLACK ESCALATION TO KATIE: when a brand hasn't
+reviewed content for 2 business days → Slack ping to Katie, again at 3, 4…
+(ops-side; no brand-UI change). (2) No undo — approve/flag are terminal,
+confirmed OK. (4) Mixed multi-asset: approved siblings MAY publish while
+another asset's flag is open, but the tracker row STAYS at the laggard
+asset's stage (already the shipped behavior). (5) Stage NOT renamed;
+resolved rows wear their own stage WORD instead — row status cell + drawer
+step 4 read "Resolved" while the rail keeps its columns (drafted, this
+round). (7) The CHAT direction is RETIRED (straight-to-creator one-round
+model is dead): reviewChat.jsx deleted, REVIEW UI pill removed, rvc-/rv-
+chat CSS pruned (rv-pop popup classes kept), QUICK_FIXES removed; the
+"our team"(modal)/"Katie's team"(tracker) voice split is ACCEPTED as-is.
+(3) TONY'S DIRECTION (Slack #proj-brand-portal, Aug 18 21:19): don't
+hard-code the post-flag path — some brands (esp. bigger) will want final
+approval even after the edit; Katie decides per case (creator posts
+directly vs send back to brand) until we have 10-20 real cases. So the
+resolution outcome needs TWO endings in the real schema: publish_directly
+(default, built) OR back_to_review (asset returns to pending as a new
+version → amber face again; not built, spec-only). Failure branches
+(creator refuses fix, disputes) stay OPEN/off-system per Tony.
+
 **v45 REVIEW SHELL (Julia's mock, Aug 18) — reviewModal.jsx rebuilt as a
 three-pane workspace** (solves "confusing to go from one creator to another
 and through one creator's drafts"): header "Approve Content" + live sub ·

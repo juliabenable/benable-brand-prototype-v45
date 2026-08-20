@@ -27,10 +27,6 @@ const F_OPTS = { edu: 'b', stage: 'dots', act: 'calm', late: 'quiet', icons: 'of
    switchers are gone from the pill (deep-links still accept overrides for the
    states gallery); the exploration lives in v39. */
 let persistedToggles = { head: 'grey', ship: 'head', table: 'k', ring: 'solid' };
-/* review direction (v43): 'modal' = Amine's review-content modal (default) ·
-   'chat' = the conversation. The v42 sheet direction was removed (Julia,
-   Aug 17) — it lives on in frozen v42. */
-let persistedRui = 'modal';
 /* Katie's per-brand admin switch: declined invites stay hidden by default */
 let persistedDeclined = false;
 
@@ -40,7 +36,6 @@ let persistedDeclined = false;
 const Q = new URLSearchParams(window.location.search);
 const EMBED = Q.has('embed');
 if (Q.get('mode') === 'local') persistedMode = 'local';
-if (['modal', 'chat'].includes(Q.get('rui'))) persistedRui = Q.get('rui');
 if (Q.has('declined')) persistedDeclined = Q.get('declined') !== '0';
 for (const k of ['table', 'head', 'ship', 'ring']) if (Q.has(k)) persistedToggles = { ...persistedToggles, [k]: Q.get(k) };
 if (Q.has('day')) {
@@ -66,8 +61,6 @@ export default function CampaignPulse() {
   const switchReview = (r) => { setReviewMode(r); setReview(r); };
   /* v43 explores review direction B: the conversation (reviewChat.jsx).
      Chat opens by default; the v42 sheet stays one click away. */
-  const [rui, setRui] = useState(persistedRui);
-  useEffect(() => { persistedRui = rui; }, [rui]);
   /* declined-invites visibility — Katie's admin switch, off by default */
   const [showDeclined, setShowDeclined] = useState(persistedDeclined);
   useEffect(() => { persistedDeclined = showDeclined; }, [showDeclined]);
@@ -78,8 +71,8 @@ export default function CampaignPulse() {
   /* day-16 recap/upNext copy differs by reviewer — resolve the variant */
   const pickR = (v) => (v && v.byReview ? (v[review] ?? v.benable) : v);
   const scene = mode === 'local'
-    ? { ...base, mode, review, rui, showDeclined, upNext: pickR(LOCAL.upNext[base.day] ?? base.upNext), recap: pickR(LOCAL.recap[base.day] ?? base.recap) }
-    : { ...base, mode, review, rui, showDeclined, upNext: pickR(base.upNext), recap: pickR(base.recap) };
+    ? { ...base, mode, review, showDeclined, upNext: pickR(LOCAL.upNext[base.day] ?? base.upNext), recap: pickR(LOCAL.recap[base.day] ?? base.recap) }
+    : { ...base, mode, review, showDeclined, upNext: pickR(base.upNext), recap: pickR(base.recap) };
   const phase = scene.phase; // 'sourcing' | 'review' | undefined (live dashboard)
 
   const switchMode = (m) => {
@@ -189,14 +182,6 @@ export default function CampaignPulse() {
         </button>
         <button type="button" className={showDeclined ? 'cp-scrub-day cp-scrub-day--active' : 'cp-scrub-day'} onClick={() => setShowDeclined(true)}>
           Shown
-        </button>
-        <span className="cp-mode-sep" aria-hidden />
-        <span className="cp-scrub-tag">REVIEW UI</span>
-        <button type="button" className={rui === 'modal' ? 'cp-scrub-day cp-scrub-day--active' : 'cp-scrub-day'} onClick={() => setRui('modal')}>
-          Modal
-        </button>
-        <button type="button" className={rui === 'chat' ? 'cp-scrub-day cp-scrub-day--active' : 'cp-scrub-day'} onClick={() => setRui('chat')}>
-          Chat
         </button>
         {/* FLAG DEMO — steps every flagged asset through the resolution
             beats (Julia, Aug 18: fix agreed → resolved, no re-review; she
