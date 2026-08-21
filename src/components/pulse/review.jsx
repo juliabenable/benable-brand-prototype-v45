@@ -4,11 +4,11 @@ import { PHOTOS, reviewFor } from './pulseData.js';
 /* Brand content review (Aug 10 call + study @4218) — the shared MODEL layer.
    WHO REVIEWS is a per-brand config — the demo pill toggles it:
    'benable' (default — Katie's team approves, the Statusphere-shaped default)
-   or 'brand' (the Trilogy model). Decided config for brand mode (Julia):
-   nudges only — silence never approves · feedback goes STRAIGHT to the
-   creator, and it can't be sent empty · no reject button (Katie's team is
-   the escape hatch) · one included change round · the composer steers to
-   EDITS — re-filming is a big ask.
+   or 'brand' (the Trilogy model). Decided config for brand mode (v43.2
+   Tony's flag model, superseding Aug 10): nudges only — silence never
+   approves · the flag note goes to the BENABLE TEAM, never the creator ·
+   can't be sent empty · no reject button · no change rounds — Katie's team
+   resolves flags with the creator (see the fix beats below).
 
    Mechanics: rows with `draftIn` have posts in REVIEW[mode]; each ASSET is
    decided on its own (a creator can send reel + story + TikTok). Decisions
@@ -23,6 +23,23 @@ import { PHOTOS, reviewFor } from './pulseData.js';
    removed then brought back (Julia, Aug 17). */
 
 const EMBED = new URLSearchParams(window.location.search).has('embed');
+
+/* states-gallery seed (?flagstate=flagged|agreed|resolved): pre-decides the
+   LOCAL day-16 assets so the gallery can frame each flag beat from a bare
+   URL (Maya: reel flagged at the given beat + story approved; Jade approved).
+   Demo-only — no param, no seeding. */
+const seedBeat = new URLSearchParams(window.location.search).get('flagstate');
+if (['flagged', 'agreed', 'resolved'].includes(seedBeat)) {
+  const seed = reviewFor('local');
+  const maya = seed.Maya?.assets ?? [];
+  if (maya[0]) {
+    maya[0].state = 'changes';
+    maya[0].notes = ['Wrong booking link on the end card.'];
+    if (seedBeat !== 'flagged') maya[0].fix = seedBeat;
+  }
+  if (maya[1]) maya[1].state = 'approved';
+  (seed.Jade?.assets ?? []).forEach((a) => { a.state = 'approved'; });
+}
 
 /* ---- who reviews (module-persisted demo config) ------------------------ */
 let reviewMode = new URLSearchParams(window.location.search).get('review') === 'brand' ? 'brand' : 'benable';
