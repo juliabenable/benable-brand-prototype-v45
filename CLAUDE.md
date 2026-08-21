@@ -38,7 +38,12 @@ manual/off-system for now (Katie handles one-off, per his don't-hard-code
 call) — the schema keeps the back_to_review ending open for later. Brand
 gets ONE email at resolved (Julia asking eng) — loud close, no beat spam.
 Stage word for resolved rows = "Draft Issue Resolved" (renamed from
-"Resolved", Julia Aug 20).
+"Resolved", Julia Aug 20). (6) WRAP RULE for the spec (prototype stays
+as-is — its `day===30 → Thanked` shortcut is demo scaffolding for the
+scrubber, NOT product logic): in production the wrap state derives from
+actual creator states, never the calendar — rows with open flags or
+unreviewed drafts keep their honest faces on the wrap roster, and the
+all-green band only renders when it's true.
 
 **v45 REVIEW SHELL (Julia's mock, Aug 18) — reviewModal.jsx rebuilt as a
 three-pane workspace** (solves "confusing to go from one creator to another
